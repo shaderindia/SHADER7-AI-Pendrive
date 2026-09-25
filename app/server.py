@@ -258,7 +258,7 @@ def load_host_settings():
 
 def public_settings(settings):
     result = {"web_search": settings.get("web_search", False),
-              "is_installed_on_host": os.path.isfile(os.path.join(install_dir(), "shader7-install.json"))}
+              "is_installed_on_host": read_json(os.path.join(install_dir(), "shader7-install.json"), {}).get("complete") is True}
     result.update({field + "_configured": bool(settings.get(field)) for field in KEY_FIELDS})
     return result
 
@@ -454,6 +454,23 @@ def perform_combined_search(query):
 def install_dir():
     return os.path.join(os.path.expanduser("~"), "LocalAI")
 
+
+def validate_model_store():
+    """Fail before copying when a checkout has manifests but no model weights."""
+    manifests = list(Path(MODEL_DIR, "manifests").rglob("*"))
+    manifests = [path for path in manifests if path.is_file()]
+    if not manifests:
+        raise ValueError("No local models found. Run Build_AI_Pendrive.bat first.")
+    for manifest in manifests:
+        document = json.loads(manifest.read_text(encoding="utf-8"))
+        for layer in [document["config"], *document["layers"]]:
+            digest = layer["digest"]
+            if not re.fullmatch(r"sha256:[0-9a-f]{64}", digest):
+                raise ValueError(f"Invalid model manifest: {manifest.name}")
+            blob = Path(MODEL_DIR, "blobs", digest.replace(":", "-"))
+            if not blob.is_file() or blob.stat().st_size != layer["size"]:
+                raise ValueError("Model files are missing or incomplete. Run Check_USB_Models.bat before installing.")
+
 def create_shortcut(target):
     env = os.environ.copy()
     env["SHADER7_INSTALL_TARGET"] = target
@@ -462,6 +479,7 @@ $target=$env:SHADER7_INSTALL_TARGET
 $desktop=[Environment]::GetFolderPath('Desktop')
 $s=(New-Object -ComObject WScript.Shell).CreateShortcut((Join-Path $desktop 'SHADER7 AI.lnk'))
 $s.TargetPath=Join-Path $target 'Launch_SHADER7_AI.vbs'
+$s.Arguments='cpu'
 $s.WorkingDirectory=$target
 $s.IconLocation=(Join-Path $target 'app.ico')+',0'
 $s.Description='SHADER7 AI - Local AI'
@@ -480,6 +498,9 @@ def run_installation_worker():
         target = install_dir()
         if within(SCRIPT_DIR, target):
             raise ValueError("This copy is already installed on the PC.")
+        if not os.path.isfile(os.path.join(SCRIPT_DIR, "python", "python.exe")) or not os.path.isfile(OLLAMA_EXE):
+            raise ValueError("Portable Python or Ollama is missing. Run Build_AI_Pendrive.bat first.")
+        validate_model_store()
         if os.path.islink(target) or os.path.realpath(target) != os.path.abspath(target):
             raise ValueError("The install directory must not be a link or junction.")
         marker = os.path.join(target, "shader7-install.json")
@@ -496,11 +517,13 @@ def run_installation_worker():
                 dirs[:] = [d for d in dirs if d != "__pycache__"]
                 for filename in files:
                     src = os.path.join(folder, filename)
+                    if os.path.islink(src):
+                        raise ValueError("Source contains a linked file. Build a fresh USB copy before installing.")
                     dst = os.path.join(target, os.path.relpath(src, USB_ROOT))
                     if not within(dst, target):
                         raise ValueError("A destination link points outside the installation.")
                     copy_tasks.append((src, dst, os.path.getsize(src)))
-        for name in ("Launch_SHADER7_AI.vbs", "Launch_SHADER7_AI.bat", "Launch_GPU_Mode.bat", "Launch_CPU_Mode.bat", "Check_USB_Models.bat", "Install_To_PC.bat", "Uninstall_From_PC.bat", "Uninstall_SHADER7_AI.ps1", "README.md", "app.ico"):
+        for name in ("Launch_SHADER7_AI.vbs", "Launch_SHADER7_AI.bat", "Launch_GPU_Mode.bat", "Launch_CPU_Mode.bat", "Check_USB_Models.bat", "Install_To_PC.bat", "Uninstall_From_PC.bat", "Uninstall_SHADER7_AI.ps1", "README.md", "LICENSE", "app.ico"):
             source = os.path.join(USB_ROOT, name)
             copy_tasks.append((source, os.path.join(target, name), os.path.getsize(source)))
         total = sum(size for _, _, size in copy_tasks)
@@ -555,9 +578,9 @@ def run_installation_worker():
 
 def launch_installed_app():
     launcher = os.path.join(install_dir(), "Launch_SHADER7_AI.vbs")
-    if not os.path.isfile(launcher):
-        return {"success": False, "error": "The installed launcher was not found."}
-    subprocess.Popen(["wscript.exe", launcher], cwd=install_dir(), creationflags=0x08000000)
+    if not os.path.isfile(launcher) or not read_json(os.path.join(install_dir(), "shader7-install.json"), {}).get("complete"):
+        return {"success": False, "error": "The PC installation is incomplete. Run Install again."}
+    subprocess.Popen(["wscript.exe", launcher, BACKEND_MODE], cwd=install_dir(), creationflags=0x08000000)
     return {"success": True}
 
 def perform_host_uninstall():
@@ -1026,14 +1049,10 @@ def select_gpu_runtime():
         if not os.path.isfile(OLLAMA_EXE):
             raise GPUOnlyError("The bundled CPU runtime is missing. Restore app/ollama.")
         return OLLAMA_EXE
-    # Run a separate, owned server; never reuse the installed app's server or models.
-    candidates = [os.path.join(os.environ.get("LOCALAPPDATA", ""), "Programs", "Ollama", "ollama.exe"),
-                  OLLAMA_EXE]
-    for candidate in candidates:
-        library = os.path.join(os.path.dirname(candidate), "lib", "ollama", "cuda_v12", "ggml-cuda.dll")
-        if os.path.isfile(candidate) and os.path.isfile(library):
-            return candidate
-    raise GPUOnlyError("CUDA 12 runtime is missing. Restore app/ollama or install Ollama with CUDA 12 support on this PC.")
+    # Ollama chooses its supported CUDA library; the model-load check rejects CPU offload.
+    if os.path.isfile(OLLAMA_EXE):
+        return OLLAMA_EXE
+    raise GPUOnlyError("The bundled Ollama runtime is missing. Rerun the USB builder.")
 
 
 def stop_backend():
@@ -1073,7 +1092,7 @@ def start_backend(restart=False):
             if restart:
                 stop_backend()
             BACKEND_READY = False
-            BACKEND_ERROR = "Starting CPU engine..." if BACKEND_MODE == "cpu" else "Starting NVIDIA GPU engine (CUDA 12)..."
+            BACKEND_ERROR = "Starting CPU engine..." if BACKEND_MODE == "cpu" else "Starting NVIDIA GPU engine..."
         def worker():
             try:
                 ensure_ollama_running()
@@ -1097,22 +1116,24 @@ def ensure_ollama_running():
         env = os.environ.copy()
         env.update(OLLAMA_MODELS=MODEL_DIR, OLLAMA_KEEP_ALIVE=GPU_KEEP_ALIVE,
                    OLLAMA_MAX_LOADED_MODELS="1", OLLAMA_NUM_PARALLEL="1", OLLAMA_CONTEXT_LENGTH=str(GPU_CONTEXT),
-                   OLLAMA_LLM_LIBRARY="cuda_v12", OLLAMA_VULKAN="false", OLLAMA_KV_CACHE_TYPE="f16",
+                   OLLAMA_VULKAN="false", OLLAMA_KV_CACHE_TYPE="f16",
                    OLLAMA_FLASH_ATTENTION="false", OLLAMA_LOAD_TIMEOUT="2m",
                    OLLAMA_NO_CLOUD="1", OLLAMA_NOPRUNE="1", OLLAMA_DEBUG="0", OLLAMA_DEBUG_LOG_REQUESTS="false")
         for key in ("CUDA_VISIBLE_DEVICES", "HIP_VISIBLE_DEVICES", "ROCR_VISIBLE_DEVICES", "GPU_DEVICE_ORDINAL",
-                    "GGML_VK_VISIBLE_DEVICES", "OLLAMA_LIBRARY_PATH"):
+                    "GGML_VK_VISIBLE_DEVICES", "OLLAMA_LIBRARY_PATH", "OLLAMA_LLM_LIBRARY"):
             env.pop(key, None)
         if BACKEND_MODE == "cpu":
             env.update(OLLAMA_LLM_LIBRARY="cpu", CUDA_VISIBLE_DEVICES="-1", HIP_VISIBLE_DEVICES="-1",
                        ROCR_VISIBLE_DEVICES="-1", GGML_VK_VISIBLE_DEVICES="-1", OLLAMA_VULKAN="false")
+        else:
+            env.update(HIP_VISIBLE_DEVICES="-1", ROCR_VISIBLE_DEVICES="-1", GGML_VK_VISIBLE_DEVICES="-1")
         log_path = os.path.join(HOST_DIR, "engine-cpu.log" if BACKEND_MODE == "cpu" else "engine.log")
         with socket.socket() as sock:
             sock.bind(("127.0.0.1", 0))
             backend_port = sock.getsockname()[1]
         OLLAMA_TARGET = f"http://127.0.0.1:{backend_port}"
         env["OLLAMA_HOST"] = OLLAMA_TARGET
-        BACKEND_ERROR = "Starting CPU engine..." if BACKEND_MODE == "cpu" else "Starting NVIDIA GPU engine (CUDA 12)..."
+        BACKEND_ERROR = "Starting CPU engine..." if BACKEND_MODE == "cpu" else "Starting NVIDIA GPU engine..."
         with open(log_path, "w", encoding="utf-8") as log:
             with BACKEND_LOCK:
                 if STOP_EVENT.is_set():
@@ -1125,7 +1146,7 @@ def ensure_ollama_running():
                 return
             if OLLAMA_PROCESS is None or OLLAMA_PROCESS.poll() is not None:
                 raise GPUOnlyError("The CPU engine exited. Check engine-cpu.log." if BACKEND_MODE == "cpu" else
-                                   "The CUDA 12 engine exited. Check engine.log. CPU fallback is disabled.")
+                                   "The GPU engine exited. Check engine.log. CPU fallback is disabled.")
             try:
                 tags = engine_json("/api/tags", timeout=1)
                 break
@@ -1147,7 +1168,7 @@ def ensure_ollama_running():
             if STOP_EVENT.is_set():
                 return
             atomic_json(os.path.join(HOST_DIR, "engine-mode-cpu.json" if BACKEND_MODE == "cpu" else "engine-mode.json"),
-                        {"mode": BACKEND_MODE, "library": "cpu" if BACKEND_MODE == "cpu" else "cuda_v12", "gpu_only": BACKEND_MODE == "gpu"}, backup=False)
+                        {"mode": BACKEND_MODE, "library": "cpu" if BACKEND_MODE == "cpu" else "cuda", "gpu_only": BACKEND_MODE == "gpu"}, backup=False)
             BACKEND_READY, BACKEND_ERROR = True, ""
     except Exception as exc:
         BACKEND_ERROR = str(exc)
