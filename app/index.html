@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SHADER7 AI — Local & Private Desktop Software</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/x-icon" href="app.ico">
+</head>
+<body>
+  <div id="appNotice" class="app-notice hidden" role="status"></div>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-container">
+          <div class="brand-logo-sparkle">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="url(#sparkleGradient)">
+              <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/>
+            </svg>
+          </div>
+          <div class="brand-text-group">
+            <span class="brand-name">SHADER7 <span class="brand-ai-badge">AI</span></span>
+          </div>
+        </div>
+        <button class="icon-btn" id="sidebarToggleBtn" title="Collapse sidebar">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="new-chat-wrapper">
+        <button class="new-chat-btn" id="newChatBtn">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+          </svg>
+          <span>New chat</span>
+        </button>
+      </div>
+
+      <div class="sidebar-section-title">Recent Conversations</div>
+      <div class="chat-history-list" id="chatHistoryList">
+        <!-- History items inserted dynamically -->
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="utility-buttons"><button class="btn btn-secondary" id="exportChatsBtn">Export chats</button><button class="btn btn-secondary" id="exitAppBtn">Exit AI</button></div>
+        <div class="status-card">
+          <div class="status-indicator">
+            <span class="status-dot" id="statusDot"></span>
+            <span class="status-text" id="statusText">Checking Ollama...</span>
+          </div>
+
+          <!-- Quick Hardware Temp Badge in Sidebar -->
+          <div class="hardware-quick-badge" id="hardwareQuickBadge" title="Click to view full PC specs & telemetry">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor">
+              <path d="M15 13V5c0-1.66-1.34-3-3-3S9 3.34 9 5v8c-1.21.91-2 2.37-2 4 0 2.76 2.24 5 5 5s5-2.24 5-5c0-1.63-.79-3.09-2-4zm-4-8c0-.55.45-1 1-1s1 .45 1 1h-1v1h1v2h-1v1h1v2h-2V5z"/>
+            </svg>
+            <span id="quickTempText">GPU: --°C</span>
+          </div>
+
+          <!-- NVIDIA API Status Badge -->
+          <div class="nvidia-quick-badge" id="nvidiaQuickBadge" title="Configure NVIDIA Nemotron Cloud API Key">
+            <span class="nvidia-icon">⚡</span>
+            <span id="nvidiaQuickText">Cloud AI: Checking settings</span>
+          </div>
+
+          <div class="workspace-badge" id="workspaceBadge" title="Chat memory stored ONLY on this PC">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor">
+              <path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/>
+            </svg>
+            <span id="workspaceText">Host Workspace (Local Only)</span>
+          </div>
+
+          <!-- Install / Uninstall Button Row -->
+          <div class="host-install-actions">
+            <button class="sidebar-install-btn" id="sidebarInstallBtn">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/>
+              </svg>
+              <span id="installBtnText">Install to this PC</span>
+            </button>
+            <button class="sidebar-uninstall-btn hidden" id="sidebarUninstallBtn" title="Uninstall SHADER7 AI from this PC">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+              </svg>
+              <span>Uninstall</span>
+            </button>
+          </div>
+
+          <!-- SHADER7 Brand Credits -->
+          <div class="brand-credits-footer">
+            <div class="credits-line">
+              <span>Created by <strong>SHADER7</strong></span>
+            </div>
+            <a href="https://shader7.com" target="_blank" rel="noopener noreferrer" class="shader7-link-btn" title="Visit shader7.com">
+              <span>🌐 shader7.com</span>
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor">
+                <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top Navigation -->
+      <header class="top-nav">
+        <div class="nav-left">
+          <button class="icon-btn navbar-sidebar-btn" id="navbarSidebarBtn" title="Toggle sidebar (Ctrl+B)">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+            </svg>
+          </button>
+
+          <a href="https://shader7.com" target="_blank" rel="noopener noreferrer" class="top-brand-badge" title="Visit SHADER7 official website (shader7.com)">
+            <span class="top-brand-title">SHADER7</span>
+          </a>
+          
+          <div class="model-picker-container">
+            <div class="gemini-sparkle">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="url(#sparkleGradient)">
+                <defs>
+                  <linearGradient id="sparkleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#1a73e8"/>
+                    <stop offset="50%" stop-color="#8ab4f8"/>
+                    <stop offset="100%" stop-color="#c58af9"/>
+                  </linearGradient>
+                </defs>
+                <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/>
+              </svg>
+            </div>
+            <select id="modelSelect" class="model-select" title="Switch Model">
+              <optgroup label="── 🎮 Local Models (GPU only) ──">
+                <option value="qwen2.5:3b">✦ qwen2.5:3b — Everyday chat (1.9 GB)</option>
+                <option value="deepseek-r1:1.5b">✦ deepseek-r1:1.5b — Math &amp; logic (1.1 GB)</option>
+                <option value="qwen2.5-coder:1.5b">✦ qwen2.5-coder:1.5b — Coding (986 MB)</option>
+                <option value="qwen-designer:1.5b">🎨 qwen-designer:1.5b — Offline websites · 8K (986 MB)</option>
+                <option value="llama3.2:3b">✦ llama3.2:3b — Chat &amp; summaries (2.0 GB)</option>
+                <option value="llama3.2:1b">✦ llama3.2:1b — Quick replies (1.3 GB)</option>
+                <option value="gemma2:2b">✦ gemma2:2b — Writing &amp; ideas (1.6 GB)</option>
+              </optgroup>
+              <optgroup label="── ⚡ Cloud API (Finance & Reasoning) ──">
+                <option value="inclusionai/ling-3.0-flash-fin:free">📈 Ling 3.0 Flash Fin (OpenRouter cloud)</option>
+                <option value="nvidia/nemotron-3-ultra-550b-a55b">⚡ NVIDIA: Nemotron 3 Ultra (550B - Cloud API)</option>
+              </optgroup>
+            </select>
+            <button class="icon-btn small-btn" id="apiKeyBtn" title="Configure NVIDIA Nemotron API Key">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+                <path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
+              </svg>
+            </button>
+            <button class="icon-btn small-btn" id="refreshModelsBtn" title="Refresh models">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+                <path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="nav-right">
+          <!-- PC Specs & Telemetry Button -->
+          <button class="nav-pill-btn" id="specsBtn" title="View live PC specs & hardware temperatures">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+              <path d="M15 13V5c0-1.66-1.34-3-3-3S9 3.34 9 5v8c-1.21.91-2 2.37-2 4 0 2.76 2.24 5 5 5s5-2.24 5-5c0-1.63-.79-3.09-2-4zm-4-8c0-.55.45-1 1-1s1 .45 1 1h-1v1h1v2h-1v1h1v2h-2V5z"/>
+            </svg>
+            <span id="navSpecsText">PC Specs & Temps</span>
+          </button>
+
+          <!-- Web Access Toggle Button -->
+          <button class="web-toggle-btn" id="webToggleBtn" title="Toggle Live Web Search">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+            </svg>
+            <span>Web Search: OFF</span>
+          </button>
+
+          <!-- Install to PC Button -->
+          <button class="install-pc-btn" id="topInstallBtn" title="Install SHADER7 AI permanently on this PC">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+              <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/>
+            </svg>
+            <span id="topInstallBtnText">Install to PC</span>
+          </button>
+
+          <button class="icon-btn" id="clearChatBtn" title="Clear current chat">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+              <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <details class="model-guide">
+        <summary>Which model should I use?</summary>
+        <div class="model-guide-body">
+          <p>Choose a model from the menu above. These are suggested uses, not automatic routing.</p>
+          <dl>
+            <dt>qwen2.5:3b — Everyday chat</dt>
+            <dd>Default for everyday questions, explanations, drafting and multilingual text.<br><span>Try: Rewrite this email clearly and politely.</span></dd>
+            <dt>deepseek-r1:1.5b — Math &amp; logic</dt>
+            <dd>Try for maths and logic problems. This small distilled reasoning model can spend extra time thinking; check its result.<br><span>Try: Solve 3x + 7 = 22 and explain the steps.</span></dd>
+            <dt>qwen2.5-coder:1.5b — Coding</dt>
+            <dd>Generate, explain and debug small code snippets or scripts.<br><span>Try: Explain this Python error and suggest a fix.</span></dd>
+            <dt>qwen-designer:latest / :1.5b — Offline websites</dt>
+            <dd>Build small responsive websites with working controls. These two names use the same Qwen Coder model with website instructions and an 8K context.<br><span>Try: Build a coffee shop website with working menu filters, then refine its design.</span></dd>
+            <dt>llama3.2:3b — Chat &amp; summaries</dt>
+            <dd>An alternative for conversation, summaries and rewriting text.<br><span>Try: Summarize these notes into five key points.</span></dd>
+            <dt>llama3.2:1b — Quick replies</dt>
+            <dd>Short questions, simple rewrites and brief summaries. Fastest measured local model on this PC.<br><span>Try: Turn these notes into a short checklist.</span></dd>
+            <dt>gemma2:2b — Writing &amp; ideas</dt>
+            <dd>Try for English drafts, creative ideas, summaries and general conversation.<br><span>Try: Suggest five titles for this short story.</span></dd>
+          </dl>
+          <p>All local models use the mode selected by your launch shortcut: CPU or GPU. Qwen 3B is the startup default. Speed does not measure answer quality; the 1B model is suited to simpler tasks. Cloud choices send your conversation online.</p>
+        </div>
+      </details>
+
+
+      <section id="modelLoadPanel" class="model-load-panel hidden" aria-label="Model loading status">
+        <span class="model-load-spinner" aria-hidden="true"></span>
+        <div class="model-load-copy">
+          <strong id="modelLoadTitle" role="status" aria-live="polite"></strong>
+          <div id="modelLoadDetail" class="model-load-detail"></div>
+        </div>
+        <span id="modelLoadTimer" class="model-load-timer" role="timer" aria-live="off"></span>
+        <button id="restartEngineBtn" class="btn btn-secondary hidden" type="button">Restart GPU engine</button>
+      </section>
+
+      <!-- Chat Viewport -->
+      <div class="chat-viewport" id="chatViewport">
+        <!-- Welcome Hero -->
+        <div class="welcome-screen" id="welcomeScreen">
+          <div class="welcome-badge">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="url(#sparkleGradient)">
+              <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/>
+            </svg>
+          </div>
+          <h1 class="welcome-title">
+            <span class="gradient-text">Welcome to SHADER7 AI</span><br>
+            What would you like to explore today?
+          </h1>
+          <p class="welcome-subtitle">
+            Local models run on this PC • Cloud chat and enabled web search send data online • Powered by <a href="https://shader7.com" target="_blank" rel="noopener noreferrer" class="inline-brand-link">SHADER7 (shader7.com)</a>
+          </p>
+
+          <div class="prompt-suggestions">
+            <button class="suggestion-chip" data-prompt="What are my exact PC hardware specs and current temperatures?">
+              <span class="chip-icon">⚡</span>
+              <span class="chip-text">Check my PC specs, VRAM & temperature</span>
+            </button>
+            <button class="suggestion-chip" data-prompt="Explain how NVIDIA Nemotron and local LLMs work in simple terms.">
+              <span class="chip-icon">🤖</span>
+              <span class="chip-text">Explain Nemotron & Local AI differences</span>
+            </button>
+            <button class="suggestion-chip" data-prompt="What are the latest breakthroughs and releases in Artificial Intelligence this year?">
+              <span class="chip-icon">🌐</span>
+              <span class="chip-text">Search latest AI breakthroughs & news</span>
+            </button>
+            <button class="suggestion-chip" data-prompt="Write a clean Python script that organizes files by type and creates logs.">
+              <span class="chip-icon">💻</span>
+              <span class="chip-text">Write a Python file organizer script</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Messages Container -->
+        <div class="messages-container" id="messagesContainer"></div>
+      </div>
+
+      <!-- Input Area -->
+      <footer class="input-container">
+        <div class="input-box-wrapper">
+          <div class="input-box">
+            <textarea
+              id="promptInput"
+              placeholder="Ask SHADER7 AI anything, check PC specs/temps, or search web..."
+              rows="1"
+              autofocus
+            ></textarea>
+            <div class="input-actions">
+              <button class="action-btn send-btn" id="sendBtn" title="Send message">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                  <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                </svg>
+              </button>
+              <button class="action-btn stop-btn hidden" id="stopBtn" title="Stop generating">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                  <rect x="6" y="6" width="12" height="12" rx="2"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="input-disclaimer">
+            SHADER7 AI • Chats & Memory Stored ONLY on Your Computer • Developed by <a href="https://shader7.com" target="_blank" rel="noopener noreferrer">SHADER7 (shader7.com)</a>
+          </div>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <!-- PC Specs & Telemetry Modal -->
+  <div class="modal-overlay hidden" id="specsModal">
+    <div class="modal-card specs-modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="#0b57d0">
+            <path d="M15 13V5c0-1.66-1.34-3-3-3S9 3.34 9 5v8c-1.21.91-2 2.37-2 4 0 2.76 2.24 5 5 5s5-2.24 5-5c0-1.63-.79-3.09-2-4zm-4-8c0-.55.45-1 1-1s1 .45 1 1h-1v1h1v2h-1v1h1v2h-2V5z"/>
+          </svg>
+          <h2>SHADER7 Hardware Telemetry</h2>
+        </div>
+        <button class="icon-btn" id="closeSpecsModalBtn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="specs-grid">
+          <!-- GPU Card -->
+          <div class="telemetry-card">
+            <div class="telemetry-card-title">
+              <span>🎮 Graphics (GPU)</span>
+              <span class="temp-pill" id="gpuTempPill">--°C</span>
+            </div>
+            <div class="telemetry-main-val" id="gpuNameVal">Loading GPU...</div>
+            <div class="telemetry-sub-val" id="gpuVramVal">VRAM: -- / -- MB</div>
+            <div class="progress-bar-container mini">
+              <div class="progress-bar-fill" id="vramBarFill" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- CPU Card -->
+          <div class="telemetry-card">
+            <div class="telemetry-card-title">
+              <span>⚡ Processor (CPU)</span>
+            </div>
+            <div class="telemetry-main-val" id="cpuNameVal">Loading CPU...</div>
+            <div class="telemetry-sub-val" id="osVal">OS: Windows</div>
+          </div>
+
+          <!-- RAM Card -->
+          <div class="telemetry-card">
+            <div class="telemetry-card-title">
+              <span>🧠 Memory (RAM)</span>
+              <span class="stat-pill" id="ramPctPill">--%</span>
+            </div>
+            <div class="telemetry-main-val" id="ramUsageVal">-- / -- GB</div>
+            <div class="progress-bar-container mini">
+              <div class="progress-bar-fill" id="ramBarFill" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- Storage Card -->
+          <div class="telemetry-card">
+            <div class="telemetry-card-title">
+              <span>💾 Storage Drives</span>
+            </div>
+            <div class="telemetry-main-val" id="storageVal">C: -- GB Free | D: -- GB Free</div>
+            <div class="telemetry-sub-val">Fast local read/write access</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="refreshSpecsBtn">🔄 Refresh Stats</button>
+        <button class="btn btn-primary" id="closeSpecsBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cloud AI API Keys Configuration Modal -->
+  <div class="modal-overlay hidden" id="nvidiaModal">
+    <div class="modal-card specs-modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span style="font-size: 20px;">⚡</span>
+          <h2>Cloud providers and API keys</h2>
+        </div>
+        <button class="icon-btn" id="closeNvidiaModalBtn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">
+          Configure API keys for advanced cloud intelligence models (<strong>Ling 3.0 Flash Fin</strong> & <strong>NVIDIA Nemotron 3 Ultra</strong>). Keys are encrypted with Windows. Leave a field blank to keep its saved key. Cloud conversations are sent to the selected provider.
+        </p>
+
+        <!-- Ling 3.0 Flash Fin Section -->
+        <div class="api-key-config-block">
+          <div class="api-key-header">
+            <span class="api-model-title">📈 Ling 3.0 Flash Fin (OpenRouter cloud)</span>
+          </div>
+          <div class="api-get-section">
+            <a href="https://openrouter.ai/inclusionai/ling-3.0-flash-fin:free" target="_blank" rel="noopener noreferrer" class="get-api-link-btn">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
+              </svg>
+              <span>👉 View Model & Get Cloud API Key (openrouter.ai/inclusionai/ling-3.0-flash-fin:free)</span>
+            </a>
+          </div>
+          <div class="input-group">
+            <label for="openrouterApiKeyInput" class="input-label">OpenRouter API Key (for Ling 3.0):</label>
+            <input
+              type="password"
+              id="openrouterApiKeyInput"
+              class="text-input"
+              placeholder="sk-or-v1-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+              autocomplete="off"
+            />
+          </div>
+        </div>
+
+        <!-- NVIDIA Nemotron Section -->
+        <div class="api-key-config-block">
+          <div class="api-key-header">
+            <span class="api-model-title">⚡ NVIDIA: Nemotron 3 Ultra (550B MoE - Cloud API)</span>
+          </div>
+          <div class="api-get-section">
+            <a href="https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b" target="_blank" rel="noopener noreferrer" class="get-api-link-btn">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
+              </svg>
+              <span>👉 Click here to Get Cloud API Key (Nemotron 3 Ultra on build.nvidia.com)</span>
+            </a>
+          </div>
+          <div class="input-group">
+            <label for="nvidiaApiKeyInput" class="input-label">NVIDIA API Key:</label>
+            <input
+              type="password"
+              id="nvidiaApiKeyInput"
+              class="text-input"
+              placeholder="nvapi-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+              autocomplete="off"
+            />
+          </div>
+        </div>
+
+        <div class="privacy-note-card">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="#137333">
+            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/>
+          </svg>
+          <span>API keys are encrypted for your Windows account. Chats stay on this PC in <code>~/LocalAI_Workspace</code>.</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancelNvidiaModalBtn">Cancel</button>
+        <button class="btn btn-secondary" id="clearKeysBtn">Clear saved keys</button>
+        <button class="btn btn-primary" id="saveNvidiaKeyBtn">Save & Activate Keys</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Install to PC Modal Dialog -->
+  <div class="modal-overlay hidden" id="installModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="#0b57d0">
+            <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/>
+          </svg>
+          <h2>Install SHADER7 AI to This PC</h2>
+        </div>
+        <button class="icon-btn" id="closeInstallModalBtn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">
+          This will install the <strong>SHADER7 AI</strong> desktop software and copy all local models to this computer, allowing you to run it anytime directly from your Desktop without needing the USB pendrive plugged in.
+        </p>
+
+        <div class="install-details">
+          <div class="detail-row">
+            <span class="detail-label">Install Location:</span>
+            <span class="detail-value"><code>~/LocalAI</code></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Model Storage:</span>
+            <span class="detail-value"><code>~/LocalAI/models</code></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Desktop Shortcut:</span>
+            <span class="detail-value"><code>SHADER7 AI.lnk</code></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Uninstaller:</span>
+            <span class="detail-value"><code>~/LocalAI/Uninstall_From_PC.bat</code></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Official Website:</span>
+            <span class="detail-value"><a href="https://shader7.com" target="_blank" rel="noopener">shader7.com</a></span>
+          </div>
+        </div>
+
+        <div class="progress-section hidden" id="installProgressSection">
+          <div class="progress-header-row">
+            <span class="progress-label">Installation Progress</span>
+            <span class="progress-pct-badge" id="progressPctBadge">0%</span>
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill" id="progressBarFill" style="width: 0%"></div>
+          </div>
+          <div class="progress-status-text" id="progressStatusText">Starting installation...</div>
+        </div>
+      </div>
+      <div class="modal-footer" id="installModalFooter">
+        <button class="btn btn-secondary" id="cancelInstallBtn">Cancel</button>
+        <button class="btn btn-primary" id="confirmInstallBtn">
+          <span>Start Installation</span>
+        </button>
+        <button class="btn btn-primary hidden" id="launchNowBtn">
+          <span>🚀 Launch Now</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Uninstall Confirmation Modal -->
+  <div class="modal-overlay hidden" id="uninstallModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="#d93025">
+            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+          </svg>
+          <h2>Uninstall SHADER7 AI</h2>
+        </div>
+        <button class="icon-btn" id="closeUninstallModalBtn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">
+          Are you sure you want to remove <strong>SHADER7 AI</strong> from this PC? This removes the installed app, its own models folder, and its Desktop shortcut. Your chats, API keys, and shared Ollama models are kept.
+        </p>
+        <div class="privacy-note-card">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="#1a73e8">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+          </svg>
+          <span>Your USB pendrive is unaffected and can be used to launch or reinstall the AI anytime.</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancelUninstallBtn">Cancel</button>
+        <button class="btn btn-danger" id="confirmUninstallBtn">Confirm Uninstall</button>
+      </div>
+    </div>
+  </div>
+  <!-- Live Website Preview Modal -->
+  <div class="modal-overlay hidden" id="previewModal">
+    <div class="modal-card preview-modal-card">
+      <div class="modal-header preview-modal-header">
+        <div class="preview-header-left">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="#1a73e8">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+          </svg>
+          <span class="preview-title">Live Website Preview</span>
+        </div>
+        <div class="preview-device-switcher">
+          <button class="device-btn active" id="previewDeviceDesktop" data-width="100%" title="Desktop (100%)">🖥️ Desktop</button>
+          <button class="device-btn" id="previewDeviceTablet" data-width="768px" title="Tablet (768px)">💻 Tablet</button>
+          <button class="device-btn" id="previewDeviceMobile" data-width="375px" title="Mobile (375px)">📱 Mobile</button>
+        </div>
+        <div class="preview-header-right">
+          <button class="icon-btn" id="openExternalPreviewBtn" title="Download HTML" aria-label="Download HTML">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+              <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
+            </svg>
+          </button>
+          <button class="icon-btn" id="closePreviewModalBtn" title="Close Preview">&times;</button>
+        </div>
+      </div>
+      <p id="previewStatus" class="preview-status" role="status"></p>
+      <div class="preview-modal-body">
+        <div class="preview-frame-container" id="previewFrameContainer">
+          <iframe id="websitePreviewFrame" title="Generated website preview" sandbox="allow-scripts allow-modals" referrerpolicy="no-referrer"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

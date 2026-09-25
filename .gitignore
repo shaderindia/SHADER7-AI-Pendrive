@@ -1,0 +1,26 @@
+# Runtime binaries (installed via Build_AI_Pendrive script)
+app/python/
+app/ollama/
+
+# Heavy model blobs (>100MB blobs are pulled via Ollama)
+models/blobs/*
+!models/blobs/.gitkeep
+
+# Windows / OS files
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+System Volume Information/
+*.lnk
+
+# Python cache & temp
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+
+# Local host workspace & logs
+LocalAI_Workspace/
+*.log
+*.bak
+.shader7-*

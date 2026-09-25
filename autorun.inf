@@ -1,0 +1,5 @@
+[AutoRun]
+Icon=app.ico
+Label=SHADER7 AI
+Open=Launch_SHADER7_AI.vbs
+Action=Launch SHADER7 AI
