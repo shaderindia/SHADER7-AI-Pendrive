@@ -407,7 +407,9 @@ def search_news(query, max_results=4):
                 title = item.findtext("title", "")
                 link = item.findtext("link", "")
                 pubDate = item.findtext("pubDate", "")
-                results.append({"title": title, "url": link, "snippet": f"News Report ({pubDate})"})
+                snippet = html.unescape(re.sub(r"<[^>]+>", " ", item.findtext("description", "")))
+                snippet = " ".join(snippet.split())[:500]
+                results.append({"title": title, "url": link, "snippet": snippet or f"News report ({pubDate})"})
             return results
     except Exception:
         return []
@@ -428,16 +430,41 @@ def search_ddg_instant(query):
     except Exception:
         return []
 
+def search_bing_rss(query, max_results=5):
+    """Get general web results without requiring another API key."""
+    url = f"https://www.bing.com/search?q={urllib.parse.quote(query)}&format=rss"
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    try:
+        with urllib.request.urlopen(req, timeout=6) as res:
+            root = ET.fromstring(res.read())
+        results = []
+        for item in root.findall("./channel/item"):
+            link = item.findtext("link", "").strip()
+            parsed = urllib.parse.urlparse(link)
+            if parsed.scheme not in ("http", "https") or not parsed.netloc:
+                continue
+            title = html.unescape(item.findtext("title", "")).strip()
+            snippet = html.unescape(re.sub(r"<[^>]+>", " ", item.findtext("description", "")))
+            snippet = " ".join(snippet.split())[:500]
+            if title:
+                results.append({"title": title[:180], "url": link, "snippet": snippet})
+            if len(results) >= max_results:
+                break
+        return results
+    except Exception:
+        return []
+
 def perform_combined_search(query):
-    sources = []
-    with ThreadPoolExecutor(max_workers=3) as executor:
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        f_bing = executor.submit(search_bing_rss, query)
         f_wiki = executor.submit(search_wikipedia, query)
         f_news = executor.submit(search_news, query)
         f_ddg = executor.submit(search_ddg_instant, query)
+        bing, wiki, news, ddg = (f.result() for f in (f_bing, f_wiki, f_news, f_ddg))
 
-        for res in [f_wiki.result(), f_news.result(), f_ddg.result()]:
-            if res:
-                sources.extend(res)
+    recent = bool(re.search(r"\b(latest|recent|today|yesterday|current|news|update|release|20\d\d)\b", query, re.I))
+    groups = (news[:3], bing[:2], wiki[:1], ddg[:1]) if recent else (bing[:2], wiki[:1], news[:2], ddg[:1])
+    sources = [source for group in groups for source in group]
 
     seen = set()
     deduped = []

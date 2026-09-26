@@ -22,6 +22,10 @@ No administrator rights or system-wide Python/Ollama installation are required. 
 
 `qwen-designer` is created only with **All** or when it already exists in a copied local cache. The repository contains model manifest examples, **not** the large model weights. Cloning or downloading the repository alone is not a working offline installation.
 
+## Web search
+
+The **Web search** switch starts **OFF**. Turn it **ON** to add live search snippets to the next reply from any selected model, including local models, OpenRouter Ling, and NVIDIA Nemotron. The switch shows ON/OFF even in a narrow window. Search sends your query to external search services and requires internet; cloud models also require their own API key. The app shows linked sources or a warning if no live results are available. Turning the switch OFF stops search requests; it does not make a cloud model local.
+
 ## Install on this PC (optional)
 
 From the built USB drive, double-click **`Install to PC.cmd`**. This copies the app, runtime, and models to `%USERPROFILE%\LocalAI` and creates a CPU-mode desktop shortcut. For GPU mode on the PC copy, run `%USERPROFILE%\LocalAI\Launch_GPU_Mode.bat`. Allow enough free space for the selected models plus 1 GB. You can also install from the app’s menu. To remove this PC copy, run `%USERPROFILE%\LocalAI\Uninstall_From_PC.bat`. The uninstaller keeps your chats and settings.

@@ -1506,10 +1506,15 @@ body {
 .input-box { border-radius:20px; background:#fff; border-color:#dbe4ef; box-shadow:0 6px 24px #183b6510; }
 .input-box:focus-within { border-color:#5a92e5; box-shadow:0 0 0 3px #dceaff, 0 6px 24px #183b6510; }
 .input-disclaimer { margin-top:10px; }
+.web-toggle-btn .web-toggle-state { display:inline-flex; align-items:center; min-width:31px; justify-content:center; padding:2px 5px; border-radius:999px; background:#e4e9ef; color:#45586d; font-size:10px; font-weight:800; letter-spacing:.04em; }
+.web-toggle-btn.active .web-toggle-state { background:#d9efe3; color:#176742; }
+.search-warning-banner { margin-bottom:12px; padding:9px 12px; border:1px solid #efd9a5; border-radius:10px; background:#fff8e7; color:#705117; font-size:12px; }
 
 @media (max-width: 1300px) {
   .nav-right .nav-pill-btn span, .nav-right .web-toggle-btn span { display:none; }
   .nav-right .nav-pill-btn, .nav-right .web-toggle-btn { width:36px; height:36px; justify-content:center; padding:0; }
+  .nav-right .web-toggle-btn { width:auto; min-width:60px; }
+  .nav-right .web-toggle-btn .web-toggle-state { display:inline-flex; }
 }
 @media (max-width: 768px) {
   .sidebar { transition:none; }
