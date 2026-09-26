@@ -1454,6 +1454,79 @@ body {
 .model-guide dd { margin: 4px 0 12px; line-height: 1.5; }
 .model-guide dd span { font-style: italic; }
 
+/* A calmer hierarchy keeps the model and its privacy mode visible. */
+.sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+.sidebar { background:#f5f8fc; }
+.main-content { min-width:0; background:radial-gradient(circle at 60% 12%, #f6faff 0, #fff 54%); }
+.top-nav { min-height:64px; height:auto; gap:12px; padding:8px 20px; }
+.nav-left { flex:1; min-width:0; }
+.nav-right { flex-shrink:0; }
+.top-brand-badge { display:none; }
+.sidebar.collapsed ~ .main-content .top-brand-badge { display:inline-flex; }
+.sidebar-backdrop { display:none; }
+.model-picker-container { min-width:0; max-width:100%; flex:1; border-radius:14px; background:#fff; }
+.model-select { min-width:0; width:100%; max-width:400px; overflow:hidden; text-overflow:ellipsis; }
+.nav-pill-btn, .web-toggle-btn, .install-pc-btn { white-space:nowrap; flex-shrink:0; }
+.hardware-quick-badge, .nvidia-quick-badge { border:0; font-family:inherit; text-align:left; }
+.icon-btn:focus-visible, .model-select:focus-visible, .suggestion-chip:focus-visible,
+.context-action:focus-visible, .action-btn:focus-visible, .sidebar button:focus-visible,
+.top-nav button:focus-visible, .model-guide summary:focus-visible {
+  outline:2px solid #0b57d0; outline-offset:3px;
+}
+
+.model-context {
+  display:flex; align-items:center; gap:12px; flex-shrink:0;
+  min-height:44px; padding:7px 28px; border-bottom:1px solid #e7edf5;
+  background:#f7fafc; color:#38506b; font-size:12.5px;
+}
+.model-context[data-kind="cloud"] { background:#fff8ed; border-bottom-color:#f2e4ce; color:#75501c; }
+.context-badge { flex-shrink:0; border-radius:999px; padding:5px 10px; background:#e4f3eb; color:#176742; font-weight:700; }
+.model-context[data-kind="cloud"] .context-badge { background:#ffebc9; color:#805000; }
+.context-action { margin-left:auto; border:0; background:transparent; color:#0b57d0; font:inherit; font-weight:700; white-space:nowrap; cursor:pointer; }
+.model-guide { margin:4px 28px 6px; font-size:12px; }
+.model-guide summary { width:fit-content; color:#516278; }
+
+.welcome-screen { width:min(100%, 850px); max-width:850px; padding:18px 32px 28px; animation:none; }
+.welcome-badge { margin-bottom:10px; }
+.welcome-eyebrow { margin-bottom:9px; color:#47668d; font-size:11px; font-weight:800; letter-spacing:0.16em; }
+.welcome-title { max-width:700px; margin-bottom:12px; font-size:clamp(32px, 3.6vw, 46px); line-height:1.13; letter-spacing:-0.035em; }
+.welcome-subtitle { margin-bottom:22px; color:#536275; font-size:15px; }
+.welcome-mode-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); width:100%; gap:12px; margin-bottom:22px; }
+.welcome-mode-card { display:flex; flex-direction:column; gap:6px; padding:15px 18px; border:1px solid #d9e8df; border-radius:16px; background:#f1f9f4; color:#24533b; line-height:1.35; }
+.welcome-mode-card.cloud { border-color:#f2e2c7; background:#fff9f0; color:#664b25; }
+.welcome-mode-card strong { font-size:13px; }
+.welcome-mode-card span { font-size:12.5px; }
+.suggestions-title { margin-bottom:10px; color:#5b6a7b; font-size:12px; font-weight:700; }
+.prompt-suggestions { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.suggestion-chip { flex-direction:row; align-items:center; min-height:58px; padding:10px 14px; border-color:#e1e8f0; border-radius:13px; background:#fff; }
+.suggestion-chip:hover { border-color:#98b7e5; background:#f8fbff; }
+.chip-icon { display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; border-radius:10px; background:#eaf1fc; color:#1858ae; font-size:18px; }
+.chip-text { font-size:13px; }
+.input-container { padding:8px 20px 16px; }
+.input-box { border-radius:20px; background:#fff; border-color:#dbe4ef; box-shadow:0 6px 24px #183b6510; }
+.input-box:focus-within { border-color:#5a92e5; box-shadow:0 0 0 3px #dceaff, 0 6px 24px #183b6510; }
+.input-disclaimer { margin-top:10px; }
+
+@media (max-width: 1300px) {
+  .nav-right .nav-pill-btn span, .nav-right .web-toggle-btn span { display:none; }
+  .nav-right .nav-pill-btn, .nav-right .web-toggle-btn { width:36px; height:36px; justify-content:center; padding:0; }
+}
+@media (max-width: 768px) {
+  .sidebar { transition:none; }
+  .sidebar:not(.collapsed) + .sidebar-backdrop { display:block; position:fixed; inset:0; z-index:90; border:0; background:#172b4866; cursor:pointer; }
+  .top-nav { flex-wrap:wrap; padding:8px 12px; gap:6px; }
+  .nav-left, .nav-right { width:100%; }
+  .nav-right { justify-content:flex-end; }
+  .model-picker-container { flex:1; }
+  .model-select { max-width:none; }
+  .model-context { padding:8px 14px; flex-wrap:wrap; gap:6px 10px; }
+  .context-action { margin-left:0; }
+  .model-guide { margin:4px 14px 6px; }
+  .welcome-screen { padding:22px 18px 28px; }
+  .welcome-mode-grid { grid-template-columns:1fr; gap:8px; }
+  .prompt-suggestions { grid-template-columns:1fr; }
+}
+
 /* Code Block Actions & Preview Button */
 .code-block-header { display: flex; justify-content: space-between; align-items: center; }
 .code-block-actions { display: flex; align-items: center; gap: 8px; }

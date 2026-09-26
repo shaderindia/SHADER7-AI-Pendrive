@@ -45,6 +45,7 @@ const state = {
 // DOM Elements
 const elements = {
   sidebar: document.getElementById('sidebar'),
+  sidebarBackdrop: document.getElementById('sidebarBackdrop'),
   sidebarToggleBtn: document.getElementById('sidebarToggleBtn'),
   navbarSidebarBtn: document.getElementById('navbarSidebarBtn'),
   newChatBtn: document.getElementById('newChatBtn'),
@@ -103,6 +104,10 @@ const elements = {
   cancelUninstallBtn: document.getElementById('cancelUninstallBtn'),
   confirmUninstallBtn: document.getElementById('confirmUninstallBtn'),
   modelSelect: document.getElementById('modelSelect'),
+  modelContext: document.getElementById('modelContext'),
+  modelModeBadge: document.getElementById('modelModeBadge'),
+  modelContextText: document.getElementById('modelContextText'),
+  openCloudSettingsBtn: document.getElementById('openCloudSettingsBtn'),
   refreshModelsBtn: document.getElementById('refreshModelsBtn'),
   webToggleBtn: document.getElementById('webToggleBtn'),
   clearChatBtn: document.getElementById('clearChatBtn'),
@@ -122,10 +127,18 @@ const elements = {
   previewDeviceMobile: document.getElementById('previewDeviceMobile')
 };
 
+function setSidebarOpen(open) {
+  elements.sidebar.classList.toggle('collapsed', !open);
+  elements.sidebarToggleBtn.setAttribute('aria-expanded', String(open));
+  elements.navbarSidebarBtn.setAttribute('aria-expanded', String(open));
+  elements.sidebarToggleBtn.setAttribute('aria-label', open ? 'Collapse sidebar' : 'Expand sidebar');
+}
+
 // --- Initialization ---
 async function init() {
   loadWebSearchPreference();
   setupEventListeners();
+  if (window.innerWidth <= 768) setSidebarOpen(false);
   checkOllamaHealth();
   setInterval(checkOllamaHealth, 1000);
   await loadHostSettings();
@@ -200,6 +213,22 @@ function updateCloudBadge(hasKeys) {
     elements.nvidiaQuickBadge.style.color = '#b06000';
     elements.nvidiaQuickBadge.style.backgroundColor = '#fef7e0';
   }
+  updateModelContext();
+}
+
+function updateModelContext() {
+  const model = state.selectedModel || elements.modelSelect.value || '';
+  const isOpenRouter = model.startsWith('inclusionai/');
+  const isNvidia = model.startsWith('nvidia/');
+  const isCloud = isOpenRouter || isNvidia;
+  const configured = isOpenRouter ? state.settings.openrouter_api_key_configured : state.settings.nvidia_api_key_configured;
+  elements.modelContext.dataset.kind = isCloud ? 'cloud' : 'local';
+  elements.modelModeBadge.textContent = isCloud ? 'Cloud model' : 'On this PC';
+  elements.modelContextText.textContent = isCloud
+    ? configured ? 'API key ready. Your messages are sent to the selected provider.' : 'An API key and internet connection are required.'
+    : state.webSearchEnabled ? 'Local model. Web search is on and may send queries online.' : 'Local model. No API key needed; web search is off.';
+  elements.openCloudSettingsBtn.classList.toggle('hidden', !isCloud);
+  if (isCloud) elements.openCloudSettingsBtn.textContent = configured ? 'Manage keys' : 'Add API key';
 }
 
 function loadWebSearchPreference() {
@@ -215,6 +244,7 @@ function updateWebSearchUI() {
     elements.webToggleBtn.classList.remove('active');
     elements.webToggleBtn.querySelector('span').textContent = 'Web Search: OFF';
   }
+  updateModelContext();
 }
 
 // --- System Telemetry & Hardware Stats ---
@@ -333,7 +363,7 @@ function setupEventListeners() {
   });
   // Sidebar toggle helpers
   const toggleSidebar = () => {
-    elements.sidebar.classList.toggle('collapsed');
+    setSidebarOpen(elements.sidebar.classList.contains('collapsed'));
   };
 
   if (elements.sidebarToggleBtn) {
@@ -342,6 +372,7 @@ function setupEventListeners() {
   if (elements.navbarSidebarBtn) {
     elements.navbarSidebarBtn.addEventListener('click', toggleSidebar);
   }
+  elements.sidebarBackdrop.addEventListener('click', () => setSidebarOpen(false));
 
   // Keyboard shortcut: Ctrl + B or Ctrl + \ to toggle sidebar
   document.addEventListener('keydown', (e) => {
@@ -359,6 +390,7 @@ function setupEventListeners() {
   // Model Selection (Per-Chat Model Persistence)
   elements.modelSelect.addEventListener('change', (e) => {
     state.selectedModel = e.target.value;
+    updateModelContext();
     localStorage.setItem('local_ai_selected_model', state.selectedModel);
     
     // Assign model to current chat window
@@ -391,6 +423,7 @@ function setupEventListeners() {
   const closeCloudModal = () => elements.nvidiaModal.classList.add('hidden');
 
   elements.apiKeyBtn.addEventListener('click', openCloudModal);
+  elements.openCloudSettingsBtn.addEventListener('click', openCloudModal);
   elements.nvidiaQuickBadge.addEventListener('click', openCloudModal);
   elements.closeNvidiaModalBtn.addEventListener('click', closeCloudModal);
   elements.cancelNvidiaModalBtn.addEventListener('click', closeCloudModal);
@@ -613,7 +646,8 @@ function setupEventListeners() {
       if (prompt) {
         elements.promptInput.value = prompt;
         autoResizeTextarea(elements.promptInput);
-        sendMessage();
+        elements.sendBtn.disabled = !prompt.trim() || state.isGenerating;
+        elements.promptInput.focus();
       }
     });
   });
@@ -850,7 +884,7 @@ async function fetchModels(showFeedback = false) {
 
     // Group 1: Local Offline Models
     const localGroup = document.createElement('optgroup');
-    localGroup.label = `Local Models (${state.engineMode === 'cpu' ? 'CPU' : 'GPU'} only)`;
+    localGroup.label = `Local AI · ${state.engineMode === 'cpu' ? 'CPU' : 'GPU'} mode · no API key`;
 
     localModels.forEach(model => {
       const opt = document.createElement('option');
@@ -864,7 +898,7 @@ async function fetchModels(showFeedback = false) {
 
     // Group 2: Free Cloud Models (Ling 3.0 Flash Fin & NVIDIA Nemotron)
     const cloudGroup = document.createElement('optgroup');
-    cloudGroup.label = 'Cloud providers - conversation sent online';
+    cloudGroup.label = 'Cloud AI · API key required · sends messages online';
 
     const lingOpt = document.createElement('option');
     lingOpt.value = 'inclusionai/ling-3.0-flash-fin:free';
@@ -894,6 +928,7 @@ async function fetchModels(showFeedback = false) {
       state.selectedModel = localModels.some(m => m.name === 'qwen2.5:3b') ? 'qwen2.5:3b' : (localModels[0]?.name || 'qwen2.5:3b');
       elements.modelSelect.value = state.selectedModel;
     }
+    updateModelContext();
 
     if (showFeedback) {
       elements.refreshModelsBtn.classList.add('rotated');
@@ -938,6 +973,7 @@ function createNewChat() {
   if (elements.modelSelect) {
     elements.modelSelect.value = activeModel;
   }
+  updateModelContext();
 
   saveHostChats();
   renderHistoryList();
@@ -961,12 +997,13 @@ function loadChat(chatId) {
       saveHostChats();
     }
   }
+  updateModelContext();
 
   renderHistoryList();
   renderMessages();
   // On mobile, auto-close sidebar when switching chats
   if (window.innerWidth <= 768) {
-    elements.sidebar.classList.add('collapsed');
+    setSidebarOpen(false);
   }
   elements.promptInput.focus();
 }

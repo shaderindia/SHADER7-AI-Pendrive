@@ -23,7 +23,7 @@
             <span class="brand-name">SHADER7 <span class="brand-ai-badge">AI</span></span>
           </div>
         </div>
-        <button class="icon-btn" id="sidebarToggleBtn" title="Collapse sidebar">
+        <button class="icon-btn" id="sidebarToggleBtn" title="Collapse sidebar" aria-label="Collapse sidebar" aria-controls="sidebar" aria-expanded="true">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
             <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
           </svg>
@@ -53,18 +53,18 @@
           </div>
 
           <!-- Quick Hardware Temp Badge in Sidebar -->
-          <div class="hardware-quick-badge" id="hardwareQuickBadge" title="Click to view full PC specs & telemetry">
+          <button class="hardware-quick-badge" id="hardwareQuickBadge" type="button" title="View PC specs and temperatures">
             <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor">
               <path d="M15 13V5c0-1.66-1.34-3-3-3S9 3.34 9 5v8c-1.21.91-2 2.37-2 4 0 2.76 2.24 5 5 5s5-2.24 5-5c0-1.63-.79-3.09-2-4zm-4-8c0-.55.45-1 1-1s1 .45 1 1h-1v1h1v2h-1v1h1v2h-2V5z"/>
             </svg>
             <span id="quickTempText">GPU: --°C</span>
-          </div>
+          </button>
 
           <!-- NVIDIA API Status Badge -->
-          <div class="nvidia-quick-badge" id="nvidiaQuickBadge" title="Configure NVIDIA Nemotron Cloud API Key">
+          <button class="nvidia-quick-badge" id="nvidiaQuickBadge" type="button" title="Manage cloud API keys">
             <span class="nvidia-icon">⚡</span>
             <span id="nvidiaQuickText">Cloud AI: Checking settings</span>
-          </div>
+          </button>
 
           <div class="workspace-badge" id="workspaceBadge" title="Chat memory stored ONLY on this PC">
             <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor">
@@ -104,13 +104,14 @@
         </div>
       </div>
     </aside>
+    <button class="sidebar-backdrop" id="sidebarBackdrop" type="button" aria-label="Close sidebar"></button>
 
     <!-- Main Content Area -->
     <main class="main-content">
       <!-- Top Navigation -->
       <header class="top-nav">
         <div class="nav-left">
-          <button class="icon-btn navbar-sidebar-btn" id="navbarSidebarBtn" title="Toggle sidebar (Ctrl+B)">
+          <button class="icon-btn navbar-sidebar-btn" id="navbarSidebarBtn" title="Toggle sidebar (Ctrl+B)" aria-label="Toggle sidebar" aria-controls="sidebar" aria-expanded="true">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
               <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
             </svg>
@@ -133,8 +134,9 @@
                 <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/>
               </svg>
             </div>
-            <select id="modelSelect" class="model-select" title="Switch Model">
-              <optgroup label="── 🎮 Local Models (GPU only) ──">
+            <label class="sr-only" for="modelSelect">Choose AI model</label>
+            <select id="modelSelect" class="model-select" title="Choose AI model">
+              <optgroup label="Local AI — no API key">
                 <option value="qwen2.5:3b">✦ qwen2.5:3b — Everyday chat (1.9 GB)</option>
                 <option value="deepseek-r1:1.5b">✦ deepseek-r1:1.5b — Math &amp; logic (1.1 GB)</option>
                 <option value="qwen2.5-coder:1.5b">✦ qwen2.5-coder:1.5b — Coding (986 MB)</option>
@@ -143,17 +145,17 @@
                 <option value="llama3.2:1b">✦ llama3.2:1b — Quick replies (1.3 GB)</option>
                 <option value="gemma2:2b">✦ gemma2:2b — Writing &amp; ideas (1.6 GB)</option>
               </optgroup>
-              <optgroup label="── ⚡ Cloud API (Finance & Reasoning) ──">
+              <optgroup label="Cloud AI — API key required">
                 <option value="inclusionai/ling-3.0-flash-fin:free">📈 Ling 3.0 Flash Fin (OpenRouter cloud)</option>
                 <option value="nvidia/nemotron-3-ultra-550b-a55b">⚡ NVIDIA: Nemotron 3 Ultra (550B - Cloud API)</option>
               </optgroup>
             </select>
-            <button class="icon-btn small-btn" id="apiKeyBtn" title="Configure NVIDIA Nemotron API Key">
+            <button class="icon-btn small-btn" id="apiKeyBtn" title="Manage cloud API keys" aria-label="Manage cloud API keys">
               <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
                 <path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
               </svg>
             </button>
-            <button class="icon-btn small-btn" id="refreshModelsBtn" title="Refresh models">
+            <button class="icon-btn small-btn" id="refreshModelsBtn" title="Refresh models" aria-label="Refresh models">
               <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
                 <path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
               </svg>
@@ -194,8 +196,14 @@
         </div>
       </header>
 
+      <div class="model-context" id="modelContext" data-kind="local" role="status" aria-live="polite">
+        <span class="context-badge" id="modelModeBadge">On this PC</span>
+        <span id="modelContextText">Local models work offline. No API key needed.</span>
+        <button class="context-action hidden" id="openCloudSettingsBtn" type="button">Add API key</button>
+      </div>
+
       <details class="model-guide">
-        <summary>Which model should I use?</summary>
+        <summary>Model guide</summary>
         <div class="model-guide-body">
           <p>Choose a model from the menu above. These are suggested uses, not automatic routing.</p>
           <dl>
@@ -238,30 +246,38 @@
               <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/>
             </svg>
           </div>
-          <h1 class="welcome-title">
-            <span class="gradient-text">Welcome to SHADER7 AI</span><br>
-            What would you like to explore today?
-          </h1>
-          <p class="welcome-subtitle">
-            Local models run on this PC • Cloud chat and enabled web search send data online • Powered by <a href="https://shader7.com" target="_blank" rel="noopener noreferrer" class="inline-brand-link">SHADER7 (shader7.com)</a>
-          </p>
+          <p class="welcome-eyebrow">YOUR AI WORKSPACE</p>
+          <h1 class="welcome-title">What would you like <span class="gradient-text">to make?</span></h1>
+          <p class="welcome-subtitle">Choose a model above, then start with a question or a task.</p>
 
+          <div class="welcome-mode-grid">
+            <div class="welcome-mode-card">
+              <strong>On this PC</strong>
+              <span>Downloaded models work offline, with no API key.</span>
+            </div>
+            <div class="welcome-mode-card cloud">
+              <strong>Cloud, if you choose it</strong>
+              <span>Ling and Nemotron need an API key and send prompts online.</span>
+            </div>
+          </div>
+
+          <p class="suggestions-title">Try a starting point</p>
           <div class="prompt-suggestions">
-            <button class="suggestion-chip" data-prompt="What are my exact PC hardware specs and current temperatures?">
-              <span class="chip-icon">⚡</span>
-              <span class="chip-text">Check my PC specs, VRAM & temperature</span>
+            <button class="suggestion-chip" data-prompt="Draft a clear, friendly email about rescheduling a meeting.">
+              <span class="chip-icon">✉</span>
+              <span class="chip-text">Draft a friendly email</span>
             </button>
-            <button class="suggestion-chip" data-prompt="Explain how NVIDIA Nemotron and local LLMs work in simple terms.">
-              <span class="chip-icon">🤖</span>
-              <span class="chip-text">Explain Nemotron & Local AI differences</span>
+            <button class="suggestion-chip" data-prompt="Explain a difficult topic in simple language, with one practical example.">
+              <span class="chip-icon">◇</span>
+              <span class="chip-text">Explain something simply</span>
             </button>
-            <button class="suggestion-chip" data-prompt="What are the latest breakthroughs and releases in Artificial Intelligence this year?">
-              <span class="chip-icon">🌐</span>
-              <span class="chip-text">Search latest AI breakthroughs & news</span>
+            <button class="suggestion-chip" data-prompt="Write a small Python script that organizes files by type and explains how to run it.">
+              <span class="chip-icon">⌘</span>
+              <span class="chip-text">Write a useful script</span>
             </button>
-            <button class="suggestion-chip" data-prompt="Write a clean Python script that organizes files by type and creates logs.">
-              <span class="chip-icon">💻</span>
-              <span class="chip-text">Write a Python file organizer script</span>
+            <button class="suggestion-chip" data-prompt="Plan a simple responsive landing page for a small local business.">
+              <span class="chip-icon">▦</span>
+              <span class="chip-text">Plan a landing page</span>
             </button>
           </div>
         </div>
@@ -276,7 +292,7 @@
           <div class="input-box">
             <textarea
               id="promptInput"
-              placeholder="Ask SHADER7 AI anything, check PC specs/temps, or search web..."
+              placeholder="Ask a question or describe what you want to make..."
               rows="1"
               autofocus
             ></textarea>
@@ -294,7 +310,7 @@
             </div>
           </div>
           <div class="input-disclaimer">
-            SHADER7 AI • Chats & Memory Stored ONLY on Your Computer • Developed by <a href="https://shader7.com" target="_blank" rel="noopener noreferrer">SHADER7 (shader7.com)</a>
+            Enter to send · Shift+Enter for a new line · Chats saved on this PC
           </div>
         </div>
       </footer>
